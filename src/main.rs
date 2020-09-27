@@ -2,6 +2,7 @@
 extern crate log;
 use bollard::Docker;
 use config::DockerConnectMode;
+use std::path::Path;
 
 mod config;
 mod container;
@@ -13,7 +14,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let config = config::get_config()?;
 
+    if !Path::new(&config.state_directory).exists() {
+        warn!(
+            "State directory {} doesn't exist, creating...",
+            &config.state_directory
+        );
+        std::fs::create_dir(&config.state_directory)?;
+    }
+
     let mut containers = config.containers;
+    let state_dir = config.state_directory;
     let interval = config.check_interval;
     let key = config.steam_api_key;
 
@@ -25,7 +35,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     };
 
     for container in containers.iter_mut() {
-        container.init(&key);
+        container.init(&key, &state_dir);
     }
     info!("Sleeping for {}s", interval.as_secs());
     std::thread::sleep(interval);
@@ -33,8 +43,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     loop {
         for container in containers.iter_mut() {
             container.update(&key, &docker_client);
+            container.save_state(&Path::new(&state_dir));
         }
-        info!("Sleeping for {}s", interval.as_secs());
+        info!("Sleeping for {} seconds", interval.as_secs());
         std::thread::sleep(interval);
     }
 }
