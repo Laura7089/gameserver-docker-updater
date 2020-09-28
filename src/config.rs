@@ -3,11 +3,12 @@ use std::env;
 use std::path::Path;
 use std::time::Duration;
 
-const DEFAULT_CONFIG_PATH: &'static str = "/config.yml";
-const DEFAULT_STATE_PATH: &'static str = "/updater_state";
+const DEFAULT_CONFIG_PATH: &'static str = "./config.yml";
+const DEFAULT_STATE_PATH: &'static str = "./state";
 
 #[derive(Deserialize, Debug)]
 pub struct Config {
+    #[serde(default)]
     pub steam_api_key: String,
     #[serde(with = "humantime_serde")]
     pub check_interval: Duration,
@@ -28,6 +29,8 @@ pub enum DockerConnectMode {
 pub fn get_config() -> Result<Config, Box<dyn std::error::Error>> {
     let mut args = env::args();
     args.next();
+
+    // Get the config path from the various sources
     let config_path_raw: String;
     let config_path = if let Some(path_raw) = args.next() {
         info!("Got config file path {} from arguments", path_raw);
@@ -41,11 +44,23 @@ pub fn get_config() -> Result<Config, Box<dyn std::error::Error>> {
         info!("Default config path {} selected", DEFAULT_CONFIG_PATH);
         Path::new(DEFAULT_CONFIG_PATH)
     };
-
     if !config_path.exists() {
         return Err(format!("Config file {} not found!", config_path.display()).into());
     }
+
     let mut config_basic: Config = serde_yaml::from_str(&std::fs::read_to_string(&config_path)?)?;
+
+    if config_basic.steam_api_key == "" {
+        match env::var("UPDATER_STEAM_API_KEY") {
+            Ok(k) => {
+                info!("Got steam API key from environment");
+                config_basic.steam_api_key = k;
+            }
+            Err(_) => {
+                return Err("Steam API key not found in configuration file or environment".into());
+            }
+        }
+    }
 
     if config_basic.state_directory == "" {
         match env::var("UPDATER_STATE_PATH") {

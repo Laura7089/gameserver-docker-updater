@@ -1,5 +1,8 @@
-target
 .dockerignore
-.gitignore
 .git
+.gitignore
+.travis.yml
+LICENSE
 Cargo.lock
+docker_push.sh
+target
