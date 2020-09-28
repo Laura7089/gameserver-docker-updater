@@ -6,7 +6,7 @@ services:
   - docker
 
 script:
-  - docker build -t laura7089/steam-docker-updater .
+  - docker build -t laura7089/heat-exchanger .
 
 deploy:
   provider: script

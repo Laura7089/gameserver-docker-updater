@@ -1,6 +1,6 @@
 # Heat Exchanger
 
-<a href="https://travis-ci.com/github/Laura7089/heat-exchanger">![Travis (.com)](https://img.shields.io/travis/com/laura7089/heat-exchanger?style=flat-square)</a>
+<a href="https://travis-ci.com/github/Laura7089/gameserver-docker-updater">![Travis (.com)](https://img.shields.io/travis/com/laura7089/heat-exchanger?style=flat-square)</a>
 <a href="https://hub.docker.com/r/laura7089/heat-exchanger">![Docker Pulls](https://img.shields.io/docker/pulls/laura7089/heat-exchanger?style=flat-square)</a>
 <a href="https://github.com/Laura7089/heat-exchanger">![GitHub last commit (branch)](https://img.shields.io/github/last-commit/laura7089/heat-exchanger/master?style=flat-square)</a>
 ![GitHub](https://img.shields.io/github/license/laura7089/heat-exchanger?style=flat-square)
