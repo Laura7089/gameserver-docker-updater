@@ -10,6 +10,9 @@ RUN cargo build --release
 
 FROM debian:buster-slim AS runner
 
+RUN apt-get update
+RUN apt-get install -y libssl-dev
+
 ENV RUST_LOG=info
 ENV UPDATER_CONFIG_PATH=/config.yml
 ENV UPDATER_STATE_PATH=/updater_state
