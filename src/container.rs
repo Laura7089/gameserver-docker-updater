@@ -28,6 +28,10 @@ pub enum UpdateAction {
 
 impl Container {
     pub fn init(&mut self, key: &str, state_dir: &str) {
+        debug!(
+            "Initialising container {} (appid {})",
+            self.name, self.appid
+        );
         let save_path_raw = self.save_file(state_dir);
         let save_path = Path::new(&save_path_raw);
 
@@ -68,7 +72,7 @@ impl Container {
     }
 
     pub fn update(&mut self, api_key: &str, docker_client: &Docker) {
-        info!("Checking version of {}", self.name);
+        debug!("Checking version of {}", self.name);
         let new_version = match get_game_version(&api_key, self.appid) {
             Ok(v) => {
                 debug!(
@@ -87,14 +91,16 @@ impl Container {
         };
 
         if self.current_version == new_version {
-            info!("{} is UP-TO-DATE at version {}", self.name, self.current_version);
+            info!(
+                "{} is UP-TO-DATE at version {}",
+                self.name, self.current_version
+            );
             return;
         }
 
         match self.action {
             UpdateAction::DockerRestart => {
                 if let Ok(_) = self.restart(docker_client) {
-                    info!("Container {} successfully restarted", self.name);
                     self.current_version = new_version;
                 }
             }
@@ -103,12 +109,16 @@ impl Container {
     }
 
     pub fn restart(&self, docker_client: &Docker) -> Result<(), Box<dyn std::error::Error>> {
+        debug!("Restarting container {}", self.name);
         match executor::block_on(docker_client.restart_container(&self.name, None)) {
             Err(e) => {
                 error!("FAILED to restart container {}: {}", self.name, &e);
                 Err(Box::new(e))
             }
-            _ => Ok(()),
+            _ => {
+                info!("Container {} successfully updated via restart", self.name);
+                Ok(())
+            }
         }
     }
 
