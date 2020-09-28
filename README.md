@@ -16,6 +16,7 @@ It's recommended to use docker to launch the service:
 ```bash
 docker run -d \
   -v "./updater-config.yml:/config.yml" \
+  -v "/var/run/docker.sock:/var/run/docker.sock" \
   laura7089/steam-docker-updater
 ```
 
