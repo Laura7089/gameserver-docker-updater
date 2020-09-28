@@ -1,3 +1,5 @@
+use reqwest::blocking;
+use reqwest::StatusCode;
 use serde::Deserialize;
 use std::collections::BTreeMap;
 
@@ -21,8 +23,14 @@ pub fn get_game_version(key: &str, appid: u64) -> Result<SteamVersion, Box<dyn s
     );
     debug!("Making request to {}", url);
 
-    let body = reqwest::blocking::get(&url)?.text()?;
-    let game_schema: BTreeMap<String, SteamGame> = serde_json::from_str(&body)?;
-
-    Ok(game_schema.get("game").unwrap().version.parse()?)
+    let result = blocking::get(&url)?;
+    match result.status() {
+        StatusCode::OK | StatusCode::CREATED | StatusCode::ACCEPTED => {
+            let body = result.text()?;
+            let game_schema: BTreeMap<String, SteamGame> = serde_json::from_str(&body)?;
+            Ok(game_schema.get("game").unwrap().version.parse()?)
+        }
+        StatusCode::FORBIDDEN => Err("Steam API returned 403 - check your API key".into()),
+        s @ _ => Err(format!("Steam API returned {}", s.as_u16()).into()),
+    }
 }

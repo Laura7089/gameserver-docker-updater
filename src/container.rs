@@ -1,6 +1,5 @@
 use crate::steam::{get_game_version, SteamVersion};
 use bollard::Docker;
-use futures::executor;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use std::path::Path;
@@ -112,7 +111,12 @@ impl Container {
 
     pub fn restart(&self, docker_client: &Docker) -> Result<(), Box<dyn std::error::Error>> {
         debug!("Restarting container {}", self.name);
-        match executor::block_on(docker_client.restart_container(&self.name, None)) {
+        let mut runtime = tokio::runtime::Builder::new()
+            .basic_scheduler()
+            .enable_all()
+            .build()
+            .unwrap();
+        match runtime.block_on(docker_client.restart_container(&self.name, None)) {
             Err(e) => {
                 error!("FAILED to restart container {}: {}", self.name, &e);
                 Err(Box::new(e))
