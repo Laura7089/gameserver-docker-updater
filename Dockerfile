@@ -1,11 +1,14 @@
 FROM rust:slim AS builder
 MAINTAINER Laura Demkowicz-Duffy <edward70891@gmail.com>
 
+RUN apt-get update
+RUN apt-get install -y pkg-config libssl-dev
+
 WORKDIR /source
 COPY . .
 RUN cargo build --release
 
-FROM debian:slim AS runner
+FROM debian:buster-slim AS runner
 
 ENV RUST_LOG=info
 ENV UPDATER_CONFIG_PATH=/config.yml
