@@ -35,9 +35,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     };
 
     for container in containers.iter_mut() {
-        container.init(&key, &state_dir);
+        container.init(&key, &docker_client, &state_dir);
     }
-    info!("Startup complete, sleeping for {} seconds", interval.as_secs());
+    info!(
+        "Startup complete, sleeping for {} seconds",
+        interval.as_secs()
+    );
     std::thread::sleep(interval);
 
     loop {

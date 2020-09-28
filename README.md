@@ -61,3 +61,12 @@ containers:
     appid: 440
     action: restart
 ```
+
+## Logging
+
+Set the environment variable `RUST_LOG` to change the logging level:
+
+- `debug` will print as much information as possible - this will print your API key to the console!
+- `info` will print enough information to get a good idea of what the program is doing - this is the default when running in docker
+- `warn` will print only warnings and errors
+- `error` will print only errors

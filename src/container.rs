@@ -27,7 +27,7 @@ pub enum UpdateAction {
 }
 
 impl Container {
-    pub fn init(&mut self, key: &str, state_dir: &str) {
+    pub fn init(&mut self, key: &str, docker_client: &Docker, state_dir: &str) {
         debug!(
             "Initialising container {} (appid {})",
             self.name, self.appid
@@ -54,6 +54,8 @@ impl Container {
                 ),
             };
             self.current_version = saved_version.current_version;
+            debug!("Running initial update check for {}", self.name);
+            self.update(key, docker_client);
         } else {
             match get_game_version(key, self.appid) {
                 Ok(v) => {
@@ -64,7 +66,7 @@ impl Container {
                     self.current_version = v;
                 }
                 Err(e) => error!(
-                    "Container {} (appid {}) Initialisation FAILED: {}",
+                    "FAILED to initialise container {} (appid {}): {}",
                     self.name, self.appid, e
                 ),
             }
@@ -83,7 +85,7 @@ impl Container {
             }
             Err(e) => {
                 error!(
-                    "Container {} (appid {}) version check FAILED: {}",
+                    "FAILED to check version of container {} (appid {}): {}",
                     self.name, self.appid, e
                 );
                 return;

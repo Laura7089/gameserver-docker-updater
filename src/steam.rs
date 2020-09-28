@@ -19,6 +19,7 @@ pub fn get_game_version(key: &str, appid: u64) -> Result<SteamVersion, Box<dyn s
         "{}/?key={}&appid={}&format=json",
         GAME_MANIFEST_BASE_URL, key, appid
     );
+    debug!("Making request to {}", url);
 
     let body = reqwest::blocking::get(&url)?.text()?;
     let game_schema: BTreeMap<String, SteamGame> = serde_json::from_str(&body)?;
