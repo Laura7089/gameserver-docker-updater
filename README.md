@@ -2,6 +2,7 @@
 
 <a href="https://travis-ci.com/github/Laura7089/gameserver-docker-updater">![Travis (.com)](https://img.shields.io/travis/com/laura7089/gameserver-docker-updater?style=flat-square)</a>
 <a href="https://hub.docker.com/r/laura7089/steam-docker-updater">![Docker Pulls](https://img.shields.io/docker/pulls/laura7089/steam-docker-updater?style=flat-square)</a>
+<a href="https://github.com/Laura7089/gameserver-docker-updater">![GitHub last commit (branch)](https://img.shields.io/github/last-commit/laura7089/gameserver-docker-updater/master?style=flat-square)</a>
 ![GitHub](https://img.shields.io/github/license/laura7089/gameserver-docker-updater?style=flat-square)
 
 A service to live-update dedicated servers for games running in docker containers.
