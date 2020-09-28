@@ -1,6 +1,6 @@
 # Heat Exchanger
 
-<a href="https://travis-ci.com/github/Laura7089/gameserver-docker-updater">![Travis (.com)](https://img.shields.io/travis/com/laura7089/heat-exchanger?style=flat-square)</a>
+<a href="https://travis-ci.com/github/Laura7089/gameserver-docker-updater">![Travis (.com)](https://img.shields.io/travis/com/laura7089/gameserver-docker-updater?style=flat-square)</a>
 <a href="https://hub.docker.com/r/laura7089/heat-exchanger">![Docker Pulls](https://img.shields.io/docker/pulls/laura7089/heat-exchanger?style=flat-square)</a>
 <a href="https://github.com/Laura7089/heat-exchanger">![GitHub last commit (branch)](https://img.shields.io/github/last-commit/laura7089/heat-exchanger/master?style=flat-square)</a>
 ![GitHub](https://img.shields.io/github/license/laura7089/heat-exchanger?style=flat-square)
@@ -43,7 +43,7 @@ Option | Required | Description
 ---|---|---
 `name` | yes | The name or identifier of the container in docker
 `appid` | yes | The steam appid of the game the service is running, this is unfortunately limited to the appid of the client since steam don't appear to publish versions for products that don't have a steam store page
-`action` | yes | The action to take when the container is out of date: currently only `restart` is supported, with `build` and `custom` planned
+`action` | yes | The action to take when the container is out of date: currently only `restart` is supported, with `build`, `pull` and `custom` planned
 `options` | no | Key-value map of extra information required by the `action` you have chosen, currently not in use
 
 An example file could be:

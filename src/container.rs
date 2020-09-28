@@ -21,6 +21,8 @@ pub enum UpdateAction {
     DockerBuild,
     #[serde(rename = "restart")]
     DockerRestart,
+    #[serde(rename = "pull")]
+    DockerPull,
     #[serde(rename = "custom")]
     Custom,
 }
