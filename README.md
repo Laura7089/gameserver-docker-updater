@@ -1,9 +1,24 @@
 # Steam Docker Container Updater Service
 
+<a href="https://travis-ci.com/github/Laura7089/gameserver-docker-updater">![Travis (.com)](https://img.shields.io/travis/com/laura7089/gameserver-docker-updater?style=flat-square)</a>
+<a href="https://hub.docker.com/r/laura7089/steam-docker-updater">![Docker Pulls](https://img.shields.io/docker/pulls/laura7089/steam-docker-updater?style=flat-square)</a>
+![GitHub](https://img.shields.io/github/license/laura7089/gameserver-docker-updater?style=flat-square)
+
 A service to live-update dedicated servers for games running in docker containers.
 It uses the steam API to check when version integers change, then initiates a user-defined action on the container.
 
-## Usage and Configuration
+## Usage
+
+You will need a configuration file first.
+It's recommended to use docker to launch the service:
+
+```bash
+docker run -d \
+  -v "./updater-config.yml:/config.yml" \
+  laura7089/steam-docker-updater
+```
+
+## Configuration
 
 The service is configured with a `.yml` config file, specified with any of the following:
 
