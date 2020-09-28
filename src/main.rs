@@ -10,7 +10,7 @@ mod steam;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     env_logger::init();
-    info!("Starting gameserver updater");
+    info!("Starting heat exchanger");
 
     let config = config::get_config()?;
 

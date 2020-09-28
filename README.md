@@ -1,11 +1,13 @@
-# Steam Docker Container Updater Service
+# Heat Exchanger
 
-<a href="https://travis-ci.com/github/Laura7089/gameserver-docker-updater">![Travis (.com)](https://img.shields.io/travis/com/laura7089/gameserver-docker-updater?style=flat-square)</a>
-<a href="https://hub.docker.com/r/laura7089/steam-docker-updater">![Docker Pulls](https://img.shields.io/docker/pulls/laura7089/steam-docker-updater?style=flat-square)</a>
-<a href="https://github.com/Laura7089/gameserver-docker-updater">![GitHub last commit (branch)](https://img.shields.io/github/last-commit/laura7089/gameserver-docker-updater/master?style=flat-square)</a>
-![GitHub](https://img.shields.io/github/license/laura7089/gameserver-docker-updater?style=flat-square)
+<a href="https://travis-ci.com/github/Laura7089/heat-exchanger">![Travis (.com)](https://img.shields.io/travis/com/laura7089/heat-exchanger?style=flat-square)</a>
+<a href="https://hub.docker.com/r/laura7089/heat-exchanger">![Docker Pulls](https://img.shields.io/docker/pulls/laura7089/heat-exchanger?style=flat-square)</a>
+<a href="https://github.com/Laura7089/heat-exchanger">![GitHub last commit (branch)](https://img.shields.io/github/last-commit/laura7089/heat-exchanger/master?style=flat-square)</a>
+![GitHub](https://img.shields.io/github/license/laura7089/heat-exchanger?style=flat-square)
 
-A service to live-update dedicated servers for games running in docker containers.
+Keep your steam games' dedicated servers hot!
+
+A service to live-update dedicated servers for steam games running in docker containers.
 It uses the steam API to check when version integers change, then initiates a user-defined action on the container.
 
 ## Usage
@@ -16,7 +18,8 @@ It's recommended to use docker to launch the service:
 ```bash
 docker run -d \
   -v "./updater-config.yml:/config.yml" \
-  laura7089/steam-docker-updater
+  -v "/var/run/docker.sock:/var/run/docker.sock" \
+  laura7089/heat-exchanger
 ```
 
 ## Configuration

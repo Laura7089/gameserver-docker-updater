@@ -1,5 +1,5 @@
 [package]
-name = "steam-docker-updater"
+name = "heat-exchanger"
 version = "0.1.0"
 authors = ["Laura Demkowicz-Duffy <laura@laurademkowiczduffy.co.uk>"]
 edition = "2018"
