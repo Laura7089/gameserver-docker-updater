@@ -1,4 +1,5 @@
 use serde::Deserialize;
+use std::env;
 use std::path::Path;
 use std::time::Duration;
 
@@ -25,15 +26,15 @@ pub enum DockerConnectMode {
 }
 
 pub fn get_config() -> Result<Config, Box<dyn std::error::Error>> {
-    let mut args = std::env::args();
+    let mut args = env::args();
     args.next();
     let config_path_raw: String;
     let config_path = if let Some(path_raw) = args.next() {
         info!("Got config file path {} from arguments", path_raw);
         config_path_raw = path_raw;
         Path::new(&config_path_raw)
-    } else if let Ok(path_raw) = std::env::var("UPDATER_CONFIG_PATH") {
-        info!("Got config file path {} from arguments", path_raw);
+    } else if let Ok(path_raw) = env::var("UPDATER_CONFIG_PATH") {
+        info!("Got config file path {} from environment", path_raw);
         config_path_raw = path_raw;
         Path::new(&config_path_raw)
     } else {
@@ -47,8 +48,16 @@ pub fn get_config() -> Result<Config, Box<dyn std::error::Error>> {
     let mut config_basic: Config = serde_yaml::from_str(&std::fs::read_to_string(&config_path)?)?;
 
     if config_basic.state_directory == "" {
-        info!("State directory defaulting to {}", DEFAULT_STATE_PATH);
-        config_basic.state_directory = DEFAULT_STATE_PATH.to_owned();
+        match env::var("UPDATER_STATE_PATH") {
+            Ok(p) => {
+                info!("Got state directory {} from environment", p);
+                config_basic.state_directory = p;
+            }
+            Err(_) => {
+                info!("State directory defaulting to {}", DEFAULT_STATE_PATH);
+                config_basic.state_directory = DEFAULT_STATE_PATH.to_owned();
+            }
+        }
     }
 
     if let None = config_basic.connect_mode {
