@@ -6,3 +6,4 @@ LICENSE
 Cargo.lock
 docker_push.sh
 target
+README.md
