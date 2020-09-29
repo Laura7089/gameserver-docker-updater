@@ -121,6 +121,38 @@ impl Container {
             return;
         }
 
+        // Check the container is running, if not, warn and skip
+        let mut runtime = tokio::runtime::Builder::new()
+            .basic_scheduler()
+            .enable_all()
+            .build()
+            .unwrap();
+        let container_running =
+            match runtime.block_on(docker_client.inspect_container(&self.name, None)) {
+                Ok(r) => {
+                    if let Some(state) = r.state {
+                        state.running == Some(true)
+                    } else {
+                        error!(
+                            "FAILED inspecting container {}: no state returned by docker",
+                            self.name
+                        );
+                        return;
+                    }
+                }
+                Err(e) => {
+                    error!("FAILED inspecting container {}: {}", self.name, e);
+                    return;
+                }
+            };
+        if !container_running {
+            warn!(
+                "Container {} not running, skipping update action",
+                self.name
+            );
+            return;
+        }
+
         // Otherwise, start our update action and update the version tag if the update completes
         // successfully
         match self.action {
