@@ -6,6 +6,10 @@ use std::time::Duration;
 const DEFAULT_CONFIG_PATH: &'static str = "./config.yml";
 const DEFAULT_STATE_PATH: &'static str = "./state";
 
+/// Global application configuration
+///
+/// Call get_config() to get this from the various places the application can be configured
+/// through.
 #[derive(Deserialize, Debug)]
 pub struct Config {
     #[serde(default)]
@@ -19,6 +23,10 @@ pub struct Config {
     pub connect_mode: Option<DockerConnectMode>,
 }
 
+/// The different methods of connecting to the Docker daemon
+///
+/// Currently, support for only these 3 is planned. TLS/SSL may prove to be problematic to support,
+/// in which case I will most likely drop it.
 #[derive(Deserialize, Debug)]
 pub enum DockerConnectMode {
     UnixSocket,
@@ -26,11 +34,15 @@ pub enum DockerConnectMode {
     SSL,
 }
 
+/// Get the global config for the current program instance
+///
+/// This will read from disk, args and environment so unfortunately the contents are messy.
 pub fn get_config() -> Result<Config, Box<dyn std::error::Error>> {
+    // Get args and consume the first one to remove the program invocation string
     let mut args = env::args();
     args.next();
 
-    // Get the config path from the various sources
+    // Get the config path from the various sources, log where we got it from
     let config_path_raw: String;
     let config_path = if let Some(path_raw) = args.next() {
         info!("Got config file path {} from arguments", path_raw);
@@ -48,8 +60,11 @@ pub fn get_config() -> Result<Config, Box<dyn std::error::Error>> {
         return Err(format!("Config file {} not found!", config_path.display()).into());
     }
 
+    // Deserialise
     let mut config_basic: Config = serde_yaml::from_str(&std::fs::read_to_string(&config_path)?)?;
 
+    // TODO: Should the environment override the config file?
+    // Get the API key from the environnment if it's not in the config
     if config_basic.steam_api_key == "" {
         match env::var("UPDATER_STEAM_API_KEY") {
             Ok(k) => {
@@ -62,6 +77,7 @@ pub fn get_config() -> Result<Config, Box<dyn std::error::Error>> {
         }
     }
 
+    // Get the state directory from the environment if it's not in the config
     if config_basic.state_directory == "" {
         match env::var("UPDATER_STATE_PATH") {
             Ok(p) => {
@@ -75,6 +91,7 @@ pub fn get_config() -> Result<Config, Box<dyn std::error::Error>> {
         }
     }
 
+    // Default to connecting through the Docker Unix Socket
     if let None = config_basic.connect_mode {
         info!("Docker daemon connection method defaulting to unix socket");
         config_basic.connect_mode = Some(DockerConnectMode::UnixSocket);

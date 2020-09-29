@@ -28,14 +28,26 @@ pub enum UpdateAction {
 }
 
 impl Container {
+    /// Initialise the container
+    ///
+    /// The `Container` instance must exist beforehand, since we assume that it is deserialised
+    /// from the config file.
+    ///
+    /// This method will check if there is an existing save file; if there is, it will load the
+    /// version from that and then check the version is up to date.
+    /// If there isn't, it will assume the existing container is up to date, get the version
+    /// number from steam and stop.
     pub fn init(&mut self, key: &str, docker_client: &Docker, state_dir: &str) {
         debug!(
             "Initialising container {} (appid {})",
             self.name, self.appid
         );
+
+        // Get save-file path
         let save_path_raw = self.save_file(state_dir);
         let save_path = Path::new(&save_path_raw);
 
+        // Load in the saved version
         if save_path.exists() {
             info!(
                 "Saved state for {} found at {}",
@@ -55,6 +67,8 @@ impl Container {
                 ),
             };
             self.current_version = saved_version.current_version;
+
+            // Check the game is up-to-date now that we've initialised it
             debug!("Running initial update check for {}", self.name);
             self.update(key, docker_client);
         } else {
@@ -74,7 +88,12 @@ impl Container {
         }
     }
 
+    /// Check for updates and carry them out on a container
+    ///
+    /// Checks for version changes via steam, and if the versions don't match, runs the relevant
+    /// update handler for that container (restart, pull etc.)
     pub fn update(&mut self, api_key: &str, docker_client: &Docker) {
+        // Get the version integer from steam
         debug!("Checking version of {}", self.name);
         let new_version = match get_game_version(&api_key, self.appid) {
             Ok(v) => {
@@ -93,6 +112,7 @@ impl Container {
             }
         };
 
+        // If our version matches, just log + return without further action
         if self.current_version == new_version {
             info!(
                 "{} is UP-TO-DATE at version {}",
@@ -101,6 +121,8 @@ impl Container {
             return;
         }
 
+        // Otherwise, start our update action and update the version tag if the update completes
+        // successfully
         match self.action {
             UpdateAction::DockerRestart => {
                 if let Ok(_) = self.restart(docker_client) {
@@ -111,8 +133,15 @@ impl Container {
         }
     }
 
+    /// Restart a container
+    ///
+    /// For containers which have an update command in their entrypoint scripts. Many cimages from
+    /// docker hub follow this pattern.
     pub fn restart(&self, docker_client: &Docker) -> Result<(), Box<dyn std::error::Error>> {
         debug!("Restarting container {}", self.name);
+        // TODO: since we're gonna be working with docker more and more, we need to seriously
+        // consider using a "real" runtime + making several methods/call chains async to improve
+        // readability, performance and reasoning
         let mut runtime = tokio::runtime::Builder::new()
             .basic_scheduler()
             .enable_all()
@@ -130,7 +159,13 @@ impl Container {
         }
     }
 
+    /// Save the state of the container to disk
+    ///
+    /// Creates/updates a {container name}.json file with a simple serialisation of the container
+    /// object in it.
     pub fn save_state(&self, dir: &Path) {
+        // Save the current state to the save file directory, currently only used to save version
+        // between restarts
         debug!("Saving container {}'s state to disk", self.name);
         let serial = match serde_json::to_string(&self) {
             Ok(s) => s,
@@ -144,6 +179,9 @@ impl Container {
         }
     }
 
+    // TODO: fix typing nightmare across the application to use all one type, `Path`, `String`,
+    // `&str`, whatever
+    /// Helper method to create the path string for the save file for this container
     fn save_file(&self, dir: &str) -> String {
         Path::new(dir)
             .join(Path::new(&format!("{}.json", self.name)))
