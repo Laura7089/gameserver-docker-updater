@@ -36,6 +36,7 @@ Option | Required | Description
 `check_interval` | yes | The time to wait between checking for updates, in [humantime format](https://docs.rs/humantime/2.0.1/humantime/index.html)
 `containers` | yes | The list of containers to monitor + other options
 `state_directory` | no | The directory in which to store the state of containers on disk, defaults to `./state` running native or `/updater_state` in docker
+`connect_mode` | no | The method to connect to the docker daemon with - one of `unix_socket`, `http` or `ssl` (defaults to `unix_socket`)
 
 The containers are configured as follows:
 

@@ -29,8 +29,11 @@ pub struct Config {
 /// in which case I will most likely drop it.
 #[derive(Deserialize, Debug)]
 pub enum DockerConnectMode {
+    #[serde(rename(deserialize = "unix_socket"))]
     UnixSocket,
+    #[serde(rename(deserialize = "http"))]
     Http,
+    #[serde(rename(deserialize = "ssl"))]
     SSL,
 }
 
