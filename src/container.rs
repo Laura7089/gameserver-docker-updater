@@ -2,7 +2,7 @@ use crate::steam::{get_game_version, SteamVersion};
 use bollard::Docker;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
-use std::path::Path;
+use std::path::PathBuf;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Container {
@@ -37,15 +37,13 @@ impl Container {
     /// version from that and then check the version is up to date.
     /// If there isn't, it will assume the existing container is up to date, get the version
     /// number from steam and stop.
-    pub fn init(&mut self, key: &str, docker_client: &Docker, state_dir: &str) {
+    pub fn init(&mut self, key: &str, docker_client: &Docker, state_dir: &PathBuf) {
         debug!(
             "Initialising container {} (appid {})",
             self.name, self.appid
         );
 
-        // Get save-file path
-        let save_path_raw = self.save_file(state_dir);
-        let save_path = Path::new(&save_path_raw);
+        let save_path = self.get_save_path(state_dir);
 
         // Load in the saved version
         if save_path.exists() {
@@ -54,15 +52,15 @@ impl Container {
                 self.name,
                 save_path.display()
             );
-            let content = match std::fs::read_to_string(save_path) {
+            let content = match std::fs::read_to_string(&save_path) {
                 Ok(c) => c,
-                Err(e) => panic!("FAILED to read state file {}: {}", save_path.display(), e),
+                Err(e) => panic!("FAILED to read state file {}: {}", &save_path.display(), e),
             };
             let saved_version: Self = match serde_json::from_str(&content) {
                 Ok(s) => s,
                 Err(e) => panic!(
                     "FAILED to deserialise state from file {}: {}",
-                    save_path.display(),
+                    &save_path.display(),
                     e
                 ),
             };
@@ -195,7 +193,7 @@ impl Container {
     ///
     /// Creates/updates a {container name}.json file with a simple serialisation of the container
     /// object in it.
-    pub fn save_state(&self, dir: &Path) {
+    pub fn save_state(&self, dir: &PathBuf) {
         // Save the current state to the save file directory, currently only used to save version
         // between restarts
         debug!("Saving container {}'s state to disk", self.name);
@@ -203,22 +201,17 @@ impl Container {
             Ok(s) => s,
             Err(e) => panic!("FAILED to serialise container {}: {}", self.name, e),
         };
-        let save_path_raw = self.save_file(dir.to_str().unwrap());
-        let save_path = Path::new(&save_path_raw);
-        match std::fs::write(save_path, serial) {
+        let save_path = self.get_save_path(dir);
+        match std::fs::write(&save_path, serial) {
             Err(e) => panic!("FAILED saving container {} state to disk: {}", self.name, e),
             _ => (),
         }
     }
 
-    // TODO: fix typing nightmare across the application to use all one type, `Path`, `String`,
-    // `&str`, whatever
     /// Helper method to create the path string for the save file for this container
-    fn save_file(&self, dir: &str) -> String {
-        Path::new(dir)
-            .join(Path::new(&format!("{}.json", self.name)))
-            .to_str()
-            .unwrap()
-            .to_owned()
+    fn get_save_path(&self, dir: &PathBuf) -> PathBuf {
+        [dir.to_str().unwrap(), &format!("{}.json", self.name)]
+            .iter()
+            .collect()
     }
 }
