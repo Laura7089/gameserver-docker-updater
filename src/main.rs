@@ -42,6 +42,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Initialise all our containers
     for container in containers.iter_mut() {
         container.init(&key, &docker_client, &state_dir);
+        container.save_state(&Path::new(&state_dir));
     }
     info!(
         "Startup complete, sleeping for {} seconds",
