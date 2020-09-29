@@ -18,13 +18,13 @@ pub struct Container {
 #[derive(Serialize, Deserialize, PartialEq, Debug)]
 pub enum UpdateAction {
     #[serde(rename = "build")]
-    DockerBuild,
+    DockerBuild { context_path: PathBuf },
     #[serde(rename = "restart")]
     DockerRestart,
     #[serde(rename = "pull")]
-    DockerPull,
+    DockerPull { image: String, tag: String },
     #[serde(rename = "custom")]
-    Custom,
+    Custom { chdir: PathBuf, command: String },
 }
 
 impl Container {

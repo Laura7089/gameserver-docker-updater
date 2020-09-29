@@ -18,7 +18,7 @@ pub struct Config {
     check_interval: Duration,
     containers: Vec<crate::container::Container>,
     #[serde(default)]
-    state_directory: String,
+    state_directory: PathBuf,
     #[serde(default)]
     connect_mode: DockerConnectMode,
 }
@@ -68,16 +68,15 @@ impl Config {
         }
 
         // Deserialise
-        let mut config_basic: Config =
-            serde_yaml::from_str(&std::fs::read_to_string(&config_path)?)?;
+        let mut ret: Config = serde_yaml::from_str(&std::fs::read_to_string(&config_path)?)?;
 
         // TODO: Should the environment override the config file?
         // Get the API key from the environnment if it's not in the config
-        if config_basic.steam_api_key == "" {
+        if ret.steam_api_key == "" {
             match env::var("UPDATER_STEAM_API_KEY") {
                 Ok(k) => {
                     info!("Got steam API key from environment");
-                    config_basic.steam_api_key = k;
+                    ret.steam_api_key = k;
                 }
                 Err(_) => {
                     return Err(
@@ -88,20 +87,22 @@ impl Config {
         }
 
         // Get the state directory from the environment if it's not in the config
-        if config_basic.state_directory == "" {
-            match env::var("UPDATER_STATE_PATH") {
-                Ok(p) => {
-                    info!("Got state directory {} from environment", p);
-                    config_basic.state_directory = p;
-                }
-                Err(_) => {
-                    info!("State directory defaulting to {}", DEFAULT_STATE_PATH);
-                    config_basic.state_directory = DEFAULT_STATE_PATH.to_owned();
-                }
+        match (
+            &ret.state_directory.to_str().unwrap(),
+            env::var("UPDATER_STATE_PATH"),
+        ) {
+            (&"", Ok(p)) => {
+                info!("Got state directory {} from environment", p);
+                ret.state_directory = PathBuf::from(p);
             }
+            (&"", Err(_)) => {
+                info!("State directory defaulting to {}", DEFAULT_STATE_PATH);
+                ret.state_directory = PathBuf::from(DEFAULT_STATE_PATH);
+            }
+            _ => {}
         }
 
-        Ok(config_basic)
+        Ok(ret)
     }
 
     pub fn consume(
@@ -117,7 +118,7 @@ impl Config {
             self.containers,
             self.steam_api_key,
             self.check_interval,
-            PathBuf::from(self.state_directory),
+            self.state_directory,
             self.connect_mode,
         )
     }
