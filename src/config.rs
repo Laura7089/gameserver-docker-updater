@@ -78,36 +78,35 @@ impl Config {
         // Deserialise
         let mut ret: Config = serde_yaml::from_str(&std::fs::read_to_string(&config_path)?)?;
 
-        // TODO: Should the environment override the config file?
-        // Get the API key from the environnment if it's not in the config
-        if ret.steam_api_key == "" {
-            match env::var("UPDATER_STEAM_API_KEY") {
-                Ok(k) => {
-                    info!("Got steam API key from environment");
-                    ret.steam_api_key = k;
-                }
-                Err(_) => {
+        // Get the API key from the environnment and override the config file
+        match env::var("UPDATER_STEAM_API_KEY") {
+            Ok(k) => {
+                info!("Got steam API key from environment");
+                ret.steam_api_key = k;
+            }
+            Err(_) => {
+                if ret.steam_api_key == "" {
                     return Err(
                         "Steam API key not found in configuration file or environment".into(),
                     );
+                } else {
+                    info!("Got steam API key from config file");
                 }
             }
         }
 
         // Get the state directory from the environment if it's not in the config
-        match (
-            &ret.state_directory.to_str().unwrap(),
-            env::var("UPDATER_STATE_PATH"),
-        ) {
-            (&"", Ok(p)) => {
-                info!("Got state directory {} from environment", p);
-                ret.state_directory = PathBuf::from(p);
+        if &ret.state_directory.to_str().unwrap() == &"" {
+            match env::var("UPDATER_STATE_PATH") {
+                Ok(p) => {
+                    info!("Got state directory {} from environment", p);
+                    ret.state_directory = PathBuf::from(p);
+                }
+                Err(_) => {
+                    info!("State directory defaulting to {}", DEFAULT_STATE_PATH);
+                    ret.state_directory = PathBuf::from(DEFAULT_STATE_PATH);
+                }
             }
-            (&"", Err(_)) => {
-                info!("State directory defaulting to {}", DEFAULT_STATE_PATH);
-                ret.state_directory = PathBuf::from(DEFAULT_STATE_PATH);
-            }
-            _ => {}
         }
 
         Ok(ret)
