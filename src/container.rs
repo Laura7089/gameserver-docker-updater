@@ -70,7 +70,7 @@ impl Container {
             debug!("Running initial update check for {}", self.name);
             self.update(key, docker_client).await;
         } else {
-            match get_game_version(key, self.appid) {
+            match get_game_version(key, self.appid).await {
                 Ok(v) => {
                     info!(
                         "Initialised container {} (appid {}): version {} found",
@@ -93,7 +93,7 @@ impl Container {
     pub async fn update(&mut self, api_key: &str, docker_client: &Docker) {
         // Get the version integer from steam
         debug!("Checking version of {}", self.name);
-        let new_version = match get_game_version(&api_key, self.appid) {
+        let new_version = match get_game_version(&api_key, self.appid).await {
             Ok(v) => {
                 debug!(
                     "Got new version for container {} (appid {}): {}",

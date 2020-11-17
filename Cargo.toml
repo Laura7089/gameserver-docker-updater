@@ -17,3 +17,8 @@ env_logger = "0.7.1"
 log = "0.4.0"
 humantime-serde = "1.0.1"
 tokio = { version = "0.2.22", features = ["full"] }
+
+[dev-dependencies]
+proptest = "0.10.1"
+mockall = "0.8.0"
+test-case = "1.0.0"

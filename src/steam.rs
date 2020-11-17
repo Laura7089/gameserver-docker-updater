@@ -1,4 +1,3 @@
-use reqwest::blocking;
 use reqwest::StatusCode;
 use serde::Deserialize;
 use std::collections::BTreeMap;
@@ -24,14 +23,14 @@ struct SteamGame {
 /// Get the version integer of a game from steam
 ///
 /// Will try to log helpful messages to hint at avenues for fixes on failure.
-pub fn get_game_version(key: &str, appid: u64) -> Result<SteamVersion, Box<dyn std::error::Error>> {
+pub async fn get_game_version(key: &str, appid: u64) -> Result<SteamVersion, Box<dyn std::error::Error>> {
     let url = format!(
         "{}/?key={}&appid={}&format=json",
         GAME_MANIFEST_BASE_URL, key, appid
     );
     debug!("Making request to {}", url);
 
-    let result = blocking::get(&url)?;
+    let result = reqwest::get(&url).await?;
     match result.status() {
         StatusCode::OK | StatusCode::CREATED | StatusCode::ACCEPTED => {
             let body = result.text()?;
