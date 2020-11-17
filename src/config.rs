@@ -31,6 +31,8 @@ pub struct Config {
 pub enum DockerConnectMode {
     #[serde(rename(deserialize = "unix_socket"))]
     UnixSocket,
+    #[serde(rename(deserialize = "windows_pipe"))]
+    WindowsPipe,
     #[serde(rename(deserialize = "http"))]
     Http,
     #[serde(rename(deserialize = "ssl"))]
@@ -38,8 +40,14 @@ pub enum DockerConnectMode {
 }
 
 impl Default for DockerConnectMode {
+    #[cfg(unix)]
     fn default() -> Self {
         DockerConnectMode::UnixSocket
+    }
+
+    #[cfg(windows)]
+    fn default() -> Self {
+        DockerConnectMode::WindowsPipe
     }
 }
 

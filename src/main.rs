@@ -23,10 +23,26 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         std::fs::create_dir(&state_dir)?;
     }
 
-    let docker_client = match docker_connect_mode {
-        DockerConnectMode::UnixSocket => Docker::connect_with_unix_defaults(),
-        DockerConnectMode::Http => Docker::connect_with_http_defaults(),
-        DockerConnectMode::SSL => Docker::connect_with_ssl_defaults(),
+    let docker_client = {
+        #[cfg(unix)]
+        match docker_connect_mode {
+            DockerConnectMode::WindowsPipe => {
+                panic!("Error: The docker daemon can't be connected to with a named pipe on unix")
+            }
+            DockerConnectMode::UnixSocket => Docker::connect_with_unix_defaults(),
+            DockerConnectMode::Http => Docker::connect_with_http_defaults(),
+            DockerConnectMode::SSL => Docker::connect_with_ssl_defaults(),
+        }
+
+        #[cfg(windows)]
+        match docker_connect_mode {
+            DockerConnectMode::UnixSocket => panic!(
+                "Error: The docker daemon can't be connected to with a unix socket on windows"
+            ),
+            DockerConnectMode::WindowsPipe => Docker::connect_with_named_pipe_defaults(),
+            DockerConnectMode::Http => Docker::connect_with_http_defaults(),
+            DockerConnectMode::SSL => Docker::connect_with_ssl_defaults(),
+        }
     }?;
 
     // Initialise all our containers
