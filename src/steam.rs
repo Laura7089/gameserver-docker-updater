@@ -33,7 +33,7 @@ pub async fn get_game_version(key: &str, appid: u64) -> Result<SteamVersion, Box
     let result = reqwest::get(&url).await?;
     match result.status() {
         StatusCode::OK | StatusCode::CREATED | StatusCode::ACCEPTED => {
-            let body = result.text()?;
+            let body = result.text().await?;
             let game_schema: BTreeMap<String, SteamGame> = serde_json::from_str(&body)?;
             Ok(game_schema.get("game").unwrap().version.parse()?)
         }
