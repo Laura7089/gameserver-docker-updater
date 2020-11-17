@@ -7,7 +7,8 @@ mod config;
 mod container;
 mod steam;
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
+#[tokio::main]
+pub async fn main() -> Result<(), Box<dyn std::error::Error>> {
     env_logger::init();
     info!("Starting heat exchanger");
 
@@ -47,7 +48,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Initialise all our containers
     for container in containers.iter_mut() {
-        container.init(&key, &docker_client, &state_dir);
+        container.init(&key, &docker_client, &state_dir).await;
         container.save_state(&state_dir);
     }
     info!(
@@ -59,7 +60,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Main program loop
     loop {
         for container in containers.iter_mut() {
-            container.update(&key, &docker_client);
+            container.update(&key, &docker_client).await;
             container.save_state(&state_dir);
         }
         info!("Sleeping for {} seconds", interval.as_secs());

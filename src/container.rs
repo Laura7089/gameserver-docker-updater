@@ -37,7 +37,7 @@ impl Container {
     /// version from that and then check the version is up to date.
     /// If there isn't, it will assume the existing container is up to date, get the version
     /// number from steam and stop.
-    pub fn init(&mut self, key: &str, docker_client: &Docker, state_dir: &PathBuf) {
+    pub async fn init(&mut self, key: &str, docker_client: &Docker, state_dir: &PathBuf) {
         debug!(
             "Initialising container {} (appid {})",
             self.name, self.appid
@@ -68,7 +68,7 @@ impl Container {
 
             // Check the game is up-to-date now that we've initialised it
             debug!("Running initial update check for {}", self.name);
-            self.update(key, docker_client);
+            self.update(key, docker_client).await;
         } else {
             match get_game_version(key, self.appid) {
                 Ok(v) => {
@@ -90,7 +90,7 @@ impl Container {
     ///
     /// Checks for version changes via steam, and if the versions don't match, runs the relevant
     /// update handler for that container (restart, pull etc.)
-    pub fn update(&mut self, api_key: &str, docker_client: &Docker) {
+    pub async fn update(&mut self, api_key: &str, docker_client: &Docker) {
         // Get the version integer from steam
         debug!("Checking version of {}", self.name);
         let new_version = match get_game_version(&api_key, self.appid) {
@@ -120,13 +120,8 @@ impl Container {
         }
 
         // Check the container is running, if not, warn and skip
-        let mut runtime = tokio::runtime::Builder::new()
-            .basic_scheduler()
-            .enable_all()
-            .build()
-            .unwrap();
         let container_running =
-            match runtime.block_on(docker_client.inspect_container(&self.name, None)) {
+            match docker_client.inspect_container(&self.name, None).await {
                 Ok(r) => {
                     if let Some(state) = r.state {
                         state.running == Some(true)
@@ -155,7 +150,7 @@ impl Container {
         // successfully
         match self.action {
             UpdateAction::DockerRestart => {
-                if let Ok(_) = self.restart(docker_client) {
+                if let Ok(_) = self.restart(docker_client).await {
                     self.current_version = new_version;
                 }
             }
@@ -167,17 +162,9 @@ impl Container {
     ///
     /// For containers which have an update command in their entrypoint scripts. Many cimages from
     /// docker hub follow this pattern.
-    pub fn restart(&self, docker_client: &Docker) -> Result<(), Box<dyn std::error::Error>> {
+    pub async fn restart(&self, docker_client: &Docker) -> Result<(), Box<dyn std::error::Error>> {
         debug!("Restarting container {}", self.name);
-        // TODO: since we're gonna be working with docker more and more, we need to seriously
-        // consider using a "real" runtime + making several methods/call chains async to improve
-        // readability, performance and reasoning
-        let mut runtime = tokio::runtime::Builder::new()
-            .basic_scheduler()
-            .enable_all()
-            .build()
-            .unwrap();
-        match runtime.block_on(docker_client.restart_container(&self.name, None)) {
+        match docker_client.restart_container(&self.name, None).await {
             Err(e) => {
                 error!("FAILED to restart container {}: {}", self.name, &e);
                 Err(Box::new(e))
