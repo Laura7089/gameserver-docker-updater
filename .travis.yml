@@ -1,11 +1,15 @@
 ---
 
-language: minimal
+language: rust
+rust:
+  - stable
+cache: cargo
 
 services:
   - docker
 
 script:
+  - cargo test --verbose
   - docker build -t laura7089/heat-exchanger .
 
 deploy:
